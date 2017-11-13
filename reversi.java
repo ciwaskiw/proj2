@@ -79,48 +79,53 @@ public class reversi {
 		int cur_x = disk.x;
 		int cur_y = disk.y;
 		int deltaX = 20, deltaY = 20;
-		int score = 0;
+		int direction = 0;
 		
 		// check each direction
 		for(int i=0;i<8;i++){
 			switch(i){
 			case 0: deltaX = -1; //left
 					deltaY = 0;
+					direction = 2;
 					break;
 			case 1: deltaX = 0; //up
 					deltaY = -1;
 					break;
 			case 2: deltaX = 1; //right
 					deltaY = 0;
+					direction = 0;
 					break;
 			case 3: deltaX = 0; //down
 					deltaY = 1;
+					direction = 1;
 					break;
 			case 4: deltaX = -1;
 					deltaY = -1; //Upper left
+					direction = 6;
 					break;
 			case 5: deltaX = -1;
 					deltaY = 1; //Bottom left
+					direction = 7;
 					break;
 			case 6: deltaX = 1;
 					deltaY = 1; //Bottom right
+					direction = 4;
 					break;
 			case 7: deltaX = 1;
 					deltaY = -1; //Upper right
+					direction = 5;
 					break;
 			default:break;		//shouldn't happen 
 			}
 			
-			//go over every '2' piece, increasing score, and record the location of the first empty space
-			score = 0;
 			Point next = new Point(cur_x+deltaX, cur_y+deltaY);
 			while(board.containsKey(next) && board.get(next) == 2) {
 				Point possible_move = new Point(next.x+deltaX, next.y+deltaY);
-				score++;
 			
 				if(board.containsKey(possible_move)&& board.get(possible_move) == 0) {
 					System.out.println("legal move at (" + possible_move.x + "," + possible_move.y + ")");
-					moves.put(possible_move, score); 
+					// the direction is the reverse direction of checking direction
+					moves.put(possible_move, direction); 
 				}
 				next = possible_move;
 			}
