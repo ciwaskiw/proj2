@@ -90,6 +90,7 @@ public class reversi {
 					break;
 			case 1: deltaX = 0; //up
 					deltaY = -1;
+					direction = 3;
 					break;
 			case 2: deltaX = 1; //right
 					deltaY = 0;
