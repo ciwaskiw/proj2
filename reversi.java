@@ -1,10 +1,10 @@
-// (placeholder team name): Michael Crouch (113581236), Jin Liu, Chris Iwaskiw
+// (placeholder team name): Michael Crouch (113581236), Jin Liu(114479952), Chris Iwaskiw
 
 import java.awt.Point;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.TreeMap;
+
 
 /**
  * computer player for reversi on a custom board
@@ -29,9 +29,9 @@ public class reversi {
                 120  -40  -40   -5    15   18  18  15   -5    -40   -40   120
           120  -20   -20    0   10    13   1   1   13   10     0    -20   -20   120
           120  -20   -20    0   10    13   1   1   13   10     0    -20   -20   120
-                120  -40   -40  -5    15   18  18  15   -5    -40   -40   120
-                     120   -40  -40   0    0   0   0    -40   -40   120	
-                           120  -20   20   5   5   20   -20   120
+               120   -40  -40   -5    15   18  18  15   -5    -40   -40   120
+                     120  -40   -40   0    0   0   0    -40   -40   120	
+                          120   -20   20   5   5   20   -20   120
 */
 	
 /*	
@@ -86,7 +86,7 @@ public class reversi {
 			switch(i){
 			case 0: deltaX = -1; //left
 					deltaY = 0;
-					direction = 2;
+					direction = 2; // reverse disk from right to right to left
 					break;
 			case 1: deltaX = 0; //up
 					deltaY = -1;
@@ -123,9 +123,9 @@ public class reversi {
 			while(board.containsKey(next) && board.get(next) == 2) {
 				Point possible_move = new Point(next.x+deltaX, next.y+deltaY);
 			
+			
 				if(board.containsKey(possible_move)&& board.get(possible_move) == 0) {
 					System.out.println("legal move at (" + possible_move.x + "," + possible_move.y + ")");
-					// the direction is the reverse direction of checking direction
 					moves.put(possible_move, direction); 
 				}
 				next = possible_move;
@@ -152,61 +152,64 @@ public class reversi {
 	 * Make move at point p. **The method will be called only if the move is legal**
 	 * @param direction : corresponding to direction value setting in getLegalMoves()
 	 */
-	private static void makeMove(Point move, int direction) {
+	private static HashMap<Point,Integer> makeMove(HashMap<Point,Integer> originalBoard, Point move, int direction) {
 		
 		int cur_x = move.x;
 		int cur_y = move.y;
 		int deltaX = 20, deltaY = 20;
-		board.put(move, 1);
+		HashMap<Point,Integer> newBoard = new HashMap<Point, Integer>(originalBoard);
+		newBoard.put(move, 1);
 		
 		switch(direction){
-			case 0: deltaX = -1; //left
+			case 0: deltaX = -1; //to left
 					deltaY = 0;
 					break;
-			case 1: deltaX = 0; //up
+			case 1: deltaX = 0; //to up
 					deltaY = -1;
 					break;
-			case 2: deltaX = 1; //right
+			case 2: deltaX = 1; //to right
 					deltaY = 0;
 					break;
-			case 3: deltaX = 0; //down
+			case 3: deltaX = 0; //to down
 					deltaY = 1;
 					break;
 			case 4: deltaX = -1;
-					deltaY = -1; //Upper left
+					deltaY = -1; //to Upper left
 					break;
 			case 5: deltaX = -1;
-					deltaY = 1; //Bottom left
+					deltaY = 1; //to Bottom left
 					break;
 			case 6: deltaX = 1;
-					deltaY = 1; //Bottom right
+					deltaY = 1; //to Bottom right
 					break;
 			case 7: deltaX = 1;
-					deltaY = -1; //Upper right
+					deltaY = -1; //to Upper right
 					break;
-			default:break;		//shouldn't happen 
+			default:break;		 
 			}
 			
 			Point next = new Point(cur_x + deltaX, cur_y + deltaY);
-			while(board.get(next) != 1) {
+			while(newBoard.get(next) != 1) {
 				Point reverse = new Point(next.x, next.y);
-				board.put(reverse, 1);
+				newBoard.put(reverse, 1);
 				next = new Point(next.x + deltaX, next.y + deltaY);
 			}
-		
+		return newBoard;
 	}
 	
-	
+	private static int evaluateBoard(HashMap<Point, Integer> currentBoard) {
+		return diffInMobility(currentBoard) + diffInPositionValue(currentBoard);
+	}
 	/*
 	 * Mobility Evaluation: Calculate the difference between number of possible moves
 	 */
-	private int diffInMobility() {
+	private static int diffInMobility(HashMap<Point, Integer> currentBoard) {
 		int numOfPlayer = 0;
 		int numOfOpponent = 0;
-		for(Point disk: board.keySet()) {
-			if(board.get(disk) == 1) {
+		for(Point disk: currentBoard.keySet()) {
+			if(currentBoard.get(disk) == 1) {
 				numOfPlayer ++;
-			}else if(board.get(disk) == 2){
+			}else if(currentBoard.get(disk) == 2){
 				numOfOpponent ++;
 			}
 		}
@@ -217,15 +220,15 @@ public class reversi {
 	/*
 	 * According to preset position value table, calculate the difference between the position values.
 	 */
-	private int diffInPostionValue() {
+	private static int diffInPositionValue(HashMap<Point, Integer> currentBoard) {
 		int myValue = 0;
 		int opponentValue = 0;
 		for(int i = 0; i < 8; i++) {
 			for(int j = 0; j < 14; j++) {
 				Point position = new Point(j,i);
-				if(board.get(position) == 1) {
+				if(currentBoard.containsKey(position) && currentBoard.get(position) == 1) {
 					myValue += positionValueTable[i][j];
-				}else if(board.get(position) == 2) {
+				}else if(currentBoard.containsKey(position) && currentBoard.get(position) == 2) {
 					opponentValue += positionValueTable[i][j];
 				}
 			}
@@ -234,6 +237,7 @@ public class reversi {
 		return myValue - opponentValue;
 	}
 	
+
 	/*
 	 * Main
 	 */
@@ -243,7 +247,10 @@ public class reversi {
 		processInput(input);
 		HashMap<Point, Integer> result;
 		result = legalMoves();
-
+		System.out.println(result);
+		
+				
+	
 	}
 
 }
