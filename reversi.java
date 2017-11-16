@@ -1,9 +1,11 @@
 // (placeholder team name): Michael Crouch (113581236), Jin Liu(114479952), Chris Iwaskiw
 
 import java.awt.Point;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.TreeMap;
 
 
 /**
@@ -11,7 +13,7 @@ import java.util.Set;
  **/
 public class reversi {
 	protected static HashMap<Point, Integer> board = new HashMap<Point, Integer>();
-	
+	protected static int[] offsets = {3,2,1,0,0,1,2,3};
 	/* Note: notice that positionValue[y][x] is the position value of point(x,y) */
 	protected static int[][] positionValueTable = {
 			{0, 0, 0, 120, -20, 20, 5, 5, 20, -20, 120, 0, 0, 0},
@@ -39,32 +41,22 @@ public class reversi {
 	 * reads the next board from a scanner
 	 * (scanner should be set to stdin)
 	 */
-	static void processInput(Scanner input) {
-		for(int i = 0; i < 8; i++) {
-			board.put(new Point(i+3,0) , input.nextInt());
+	static void processInput() {
+		Scanner input = new Scanner(System.in).useDelimiter("");
+		int j = 0;
+		while(j < 8) {
+			int i = 0;
+			while(input.hasNextInt()) {
+				
+				int value = input.nextInt();
+				int offset = offsets[j];
+				board.put(new Point(i+offset,j) , value);
+				i++;
+			}
+			input.nextLine();
+			j++;
 		}
-		for(int i = 0; i < 10; i++) {
-			board.put(new Point(i+2,1) , input.nextInt());
-		}
-		for(int i = 0; i < 12; i++) {
-			board.put(new Point(i+1,2) , input.nextInt());
-		}
-		for(int i = 0; i < 14; i++) {
-			board.put(new Point(i,3) , input.nextInt());
-		}
-		for(int i = 0; i < 14; i++) {
-			board.put(new Point(i,4) , input.nextInt());
-		}
-		for(int i = 0; i < 12; i++) {
-			board.put(new Point(i+1,5) , input.nextInt());
-		}
-		for(int i = 0; i < 10; i++) {
-			board.put(new Point(i+2,6) , input.nextInt());
-		}
-		for(int i = 0; i < 8; i++) {
-			board.put(new Point(i+3,7) , input.nextInt());
-		}
-		
+		input.close();
 	}
 
 
@@ -74,8 +66,8 @@ public class reversi {
 	 * 'moves' - map of possible moves and the number of pieces taken
 	 *  
 	 */
-	private static void getLegalMoves(Point disk, HashMap<Point, Integer> moves) {
-		System.out.println("check (" + disk.x + "," + disk.y + ")getLegalMoves called");
+	private static void getLegalMoves(Point disk, TreeMap<Integer, Point> moves) {
+		//System.out.println("check (" + disk.x + "," + disk.y + ")getLegalMoves called");
 		int cur_x = disk.x;
 		int cur_y = disk.y;
 		int deltaX = 20, deltaY = 20;
@@ -126,7 +118,7 @@ public class reversi {
 			
 				if(board.containsKey(possible_move)&& board.get(possible_move) == 0) {
 					System.out.println("legal move at (" + possible_move.x + "," + possible_move.y + ")");
-					moves.put(possible_move, direction); 
+					moves.put(direction, possible_move); 
 				}
 				next = possible_move;
 			}
@@ -137,8 +129,8 @@ public class reversi {
 	/*
 	 * Quick setup for getLegalMoves()
 	 */
-	private static HashMap<Point, Integer> legalMoves(){
-		HashMap<Point, Integer> moves = new HashMap<Point, Integer>();
+	private static TreeMap<Integer, Point> legalMoves(){
+		TreeMap<Integer, Point> moves = new TreeMap<Integer, Point>();
 		Set<Point> disks = board.keySet();
 		for(Point disk: disks) {
 			if(board.get(disk) == 1) {
@@ -237,17 +229,21 @@ public class reversi {
 		return myValue - opponentValue;
 	}
 	
-
+	private static Point respond(TreeMap<Integer, Point> gameTree) {
+		return gameTree.get(gameTree.lastKey()); 
+	}
+	
 	/*
 	 * Main
 	 */
 	public static void main(String[] args) {
-		Scanner input = new Scanner(System.in);
 		
-		processInput(input);
-		HashMap<Point, Integer> result;
+		processInput();
+		TreeMap<Integer, Point> result;
 		result = legalMoves();
-		System.out.println(result);
+		HashMap<Point, Integer> myBoard = board;
+		Point output = respond(result);
+		System.out.println(output.x + " " + output.y);
 		
 				
 	
