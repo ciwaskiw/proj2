@@ -3,6 +3,7 @@
 import java.awt.Point;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
@@ -45,7 +46,9 @@ public class reversi {
 	/**Whoever's turn it is: true for player 1, false for player 2**/
 	public boolean p1;
 	/**The set of legal moves and their respective evalutation values.**/
-	public HashMap<reversi, Integer> gameTree = new HashMap<reversi, Integer>();
+	public HashSet<reversi> gameTree = new HashSet<reversi>();
+	/**The evaluation value of the current board**/
+	public int value;
 	
 	/*------------------------------CLASS CONSTRUCTOR------------------------------*/
 	
@@ -54,6 +57,7 @@ public class reversi {
 		this.board = board;
 		this.prev = prev;
 		this.p1 = p1;
+		this.value = evaluateBoard(board);
 	}
 
 	/**
@@ -81,14 +85,7 @@ public class reversi {
 
 
 	/**
-	 *00000000
-0000000000
-000002100000
-00000022000000
-00000122200000
-000002222000
-0000001000
-00000000 Generates the gameTree field.
+	 * Generates the gameTree field.
 	 * 
 	 * gets the legal moves and tokens taken
 	 * 'disk' - Our piece on the board at one end of our move
@@ -148,9 +145,8 @@ public class reversi {
 				if(board.containsKey(possible_move)&& board.get(possible_move) == 0) {
 					//System.out.println("legal move at (" + possible_move.x + "," + possible_move.y + ")");
 					HashMap<Point, Integer> nextBoard = makeMove(board, possible_move, direction);
-					Integer nextValue = evaluateBoard(nextBoard);
 					reversi nextGame = new reversi(nextBoard, possible_move, !p1);
-					gameTree.put(nextGame, nextValue); 
+					gameTree.add(nextGame); 
 				}
 				next = possible_move;
 			}
@@ -267,14 +263,42 @@ public class reversi {
 	*	Returns the correct move to make.  Currently returns the max-valued turn in the level-1 game tree,
 	*	But hopefully will use the minimax algorithm in the future.
 	**/
-	public Point respond() {
-		HashMap.Entry<reversi, Integer> maxEntry = null;
-		for (HashMap.Entry<reversi, Integer> entry : gameTree.entrySet()) {
-			if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
-		        maxEntry = entry;
+	public Point respond(int depth) {
+		return miniMax(depth).prev;		
+	}
+	
+	/** Perform the minimax algorithm on the search tree**/
+	public reversi miniMax(int depth) {
+		if(depth > 0) { //If search depth > 0, continue the search;
+			this.legalMoves(); //Generate children
+			if(gameTree.size() > 0) {//If children exist, continue the search.
+				if(p1) {
+					return maxChild(gameTree, depth);
+				} else return minChild(gameTree, depth);
+			} else return this;			
+		} else return this; 
+	}
+	
+	private static reversi maxChild(HashSet<reversi> gameTree, int depth) {
+		reversi max = null;
+		for (reversi r : gameTree) {
+			reversi minimaxed = r.miniMax(depth-1);
+			if (max == null || minimaxed.value > max.value) {
+		        max = minimaxed;
 		    }
 		}
-		return maxEntry.getKey().prev;
+		return max;
+	}
+	
+	private static reversi minChild(HashSet<reversi> gameTree, int depth) {
+		reversi min = null;
+		for (reversi r : gameTree) {
+			reversi minimaxed = r.miniMax(depth-1);
+			if (min == null || minimaxed.value > min.value) {
+		        min = minimaxed;
+		    }
+		}
+		return min;
 	}
 	
 	/*
@@ -283,8 +307,7 @@ public class reversi {
 	public static void main(String[] args) {
 		
 		reversi game = processInput();
-		game.legalMoves();
-		Point output = game.respond();
+		Point output = game.respond(5);
 		System.out.println(output.x + " " + output.y);
 		
 				
