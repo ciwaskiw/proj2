@@ -12,7 +12,7 @@ import java.util.TreeMap;
  * computer player for reversi on a custom board
  **/
 public class reversi {
-	protected static HashMap<Point, Integer> board = new HashMap<Point, Integer>();
+	/*------------------------------STATIC FIELDS------------------------------*/
 	protected static int[] offsets = {3,2,1,0,0,1,2,3};
 	/* Note: notice that positionValue[y][x] is the position value of point(x,y) */
 	protected static int[][] positionValueTable = {
@@ -36,13 +36,32 @@ public class reversi {
                           120   -20   20   5   5   20   -20   120
 */
 	
-/*	
-	/*
-	 * reads the next board from a scanner
-	 * (scanner should be set to stdin)
-	 */
-	static void processInput() {
+	/*------------------------------PUBLIC FIELDS------------------------------*/
+	
+	/**The current game board.**/
+	public HashMap<Point, Integer> board = new HashMap<Point, Integer>();
+	/**The move taken to get to this current board.  Set to null for the initial board.**/
+	public Point prev;
+	/**Whoever's turn it is: true for player 1, false for player 2**/
+	public boolean p1;
+	/**The set of legal moves and their respective evalutation values.**/
+	public HashMap<reversi, Integer> gameTree = new HashMap<reversi, Integer>();
+	
+	/*------------------------------CLASS CONSTRUCTOR------------------------------*/
+	
+	/** A reversi object contains a game board, a record of whatever the previous**/
+	public reversi(HashMap<Point, Integer> board, Point prev, boolean p1) {
+		this.board = board;
+		this.prev = prev;
+		this.p1 = p1;
+	}
+
+	/**
+	 * Creates a reversi object by reading the standard input.
+	 **/
+	static reversi processInput() {
 		Scanner input = new Scanner(System.in).useDelimiter("");
+		HashMap<Point, Integer> newBoard = new HashMap<Point, Integer>();
 		int j = 0;
 		while(j < 8) {
 			int i = 0;
@@ -50,23 +69,33 @@ public class reversi {
 				
 				int value = input.nextInt();
 				int offset = offsets[j];
-				board.put(new Point(i+offset,j) , value);
+				newBoard.put(new Point(i+offset,j) , value);
 				i++;
 			}
 			input.nextLine();
 			j++;
 		}
 		input.close();
+		return new reversi(newBoard, null, true);
 	}
 
 
-	/*
+	/**
+	 *00000000
+0000000000
+000002100000
+00000022000000
+00000122200000
+000002222000
+0000001000
+00000000 Generates the gameTree field.
+	 * 
 	 * gets the legal moves and tokens taken
 	 * 'disk' - Our piece on the board at one end of our move
 	 * 'moves' - map of possible moves and the number of pieces taken
 	 *  
-	 */
-	private static void getLegalMoves(Point disk, TreeMap<Integer, Point> moves) {
+	 **/
+	private void getLegalMoves(Point disk) {
 		//System.out.println("check (" + disk.x + "," + disk.y + ")getLegalMoves called");
 		int cur_x = disk.x;
 		int cur_y = disk.y;
@@ -117,8 +146,11 @@ public class reversi {
 			
 			
 				if(board.containsKey(possible_move)&& board.get(possible_move) == 0) {
-					System.out.println("legal move at (" + possible_move.x + "," + possible_move.y + ")");
-					moves.put(direction, possible_move); 
+					//System.out.println("legal move at (" + possible_move.x + "," + possible_move.y + ")");
+					HashMap<Point, Integer> nextBoard = makeMove(board, possible_move, direction);
+					Integer nextValue = evaluateBoard(nextBoard);
+					reversi nextGame = new reversi(nextBoard, possible_move, !p1);
+					gameTree.put(nextGame, nextValue); 
 				}
 				next = possible_move;
 			}
@@ -126,24 +158,22 @@ public class reversi {
 		
 	}
 	
-	/*
+	/**
 	 * Quick setup for getLegalMoves()
-	 */
-	private static TreeMap<Integer, Point> legalMoves(){
-		TreeMap<Integer, Point> moves = new TreeMap<Integer, Point>();
+	 **/
+	private void legalMoves(){
 		Set<Point> disks = board.keySet();
 		for(Point disk: disks) {
 			if(board.get(disk) == 1) {
-				getLegalMoves(disk,moves);
+				getLegalMoves(disk);
 			}
 		}
-		return moves;
 	}
 
-	/*
+	/**
 	 * Make move at point p. **The method will be called only if the move is legal**
 	 * @param direction : corresponding to direction value setting in getLegalMoves()
-	 */
+	 **/
 	private static HashMap<Point,Integer> makeMove(HashMap<Point,Integer> originalBoard, Point move, int direction) {
 		
 		int cur_x = move.x;
@@ -189,12 +219,16 @@ public class reversi {
 		return newBoard;
 	}
 	
+	/**
+	 * Takes a hashmap representing a game board and returns its evaluation.
+	 */
 	private static int evaluateBoard(HashMap<Point, Integer> currentBoard) {
 		return diffInMobility(currentBoard) + diffInPositionValue(currentBoard);
 	}
-	/*
+	
+	/**
 	 * Mobility Evaluation: Calculate the difference between number of possible moves
-	 */
+	 **/
 	private static int diffInMobility(HashMap<Point, Integer> currentBoard) {
 		int numOfPlayer = 0;
 		int numOfOpponent = 0;
@@ -209,9 +243,9 @@ public class reversi {
 		return numOfPlayer - numOfOpponent;
 	}
 	
-	/*
+	/**
 	 * According to preset position value table, calculate the difference between the position values.
-	 */
+	 **/
 	private static int diffInPositionValue(HashMap<Point, Integer> currentBoard) {
 		int myValue = 0;
 		int opponentValue = 0;
@@ -229,8 +263,18 @@ public class reversi {
 		return myValue - opponentValue;
 	}
 	
-	private static Point respond(TreeMap<Integer, Point> gameTree) {
-		return gameTree.get(gameTree.lastKey()); 
+	/**
+	*	Returns the correct move to make.  Currently returns the max-valued turn in the level-1 game tree,
+	*	But hopefully will use the minimax algorithm in the future.
+	**/
+	public Point respond() {
+		HashMap.Entry<reversi, Integer> maxEntry = null;
+		for (HashMap.Entry<reversi, Integer> entry : gameTree.entrySet()) {
+			if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
+		        maxEntry = entry;
+		    }
+		}
+		return maxEntry.getKey().prev;
 	}
 	
 	/*
@@ -238,11 +282,9 @@ public class reversi {
 	 */
 	public static void main(String[] args) {
 		
-		processInput();
-		TreeMap<Integer, Point> result;
-		result = legalMoves();
-		HashMap<Point, Integer> myBoard = board;
-		Point output = respond(result);
+		reversi game = processInput();
+		game.legalMoves();
+		Point output = game.respond();
 		System.out.println(output.x + " " + output.y);
 		
 				
