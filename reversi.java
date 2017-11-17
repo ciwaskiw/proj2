@@ -27,6 +27,9 @@ public class reversi {
 			{0, 0, 0, 120, -20, 20, 5, 5, 20, -20, 120, 0, 0, 0}
 			};
 
+	protected static int color(boolean p1) {
+		return p1 ? 1 : 2;
+	}
 /*	                  120   -20   20   5   5   20   -20   120
                      120  -40   -40   0    0   0   0    -40   -40   120	
                 120  -40  -40   -5    15   18  18  15   -5    -40   -40   120
@@ -57,7 +60,6 @@ public class reversi {
 		this.board = board;
 		this.prev = prev;
 		this.p1 = p1;
-		this.value = evaluateBoard(board);
 	}
 
 	/**
@@ -138,7 +140,8 @@ public class reversi {
 			}
 			
 			Point next = new Point(cur_x+deltaX, cur_y+deltaY);
-			while(board.containsKey(next) && board.get(next) == 2) {
+			
+			while(board.containsKey(next) && board.get(next) == color(!p1)) {
 				Point possible_move = new Point(next.x+deltaX, next.y+deltaY);
 			
 			
@@ -160,7 +163,7 @@ public class reversi {
 	private void legalMoves(){
 		Set<Point> disks = board.keySet();
 		for(Point disk: disks) {
-			if(board.get(disk) == 1) {
+			if(board.get(disk) == color(p1)) {
 				getLegalMoves(disk);
 			}
 		}
@@ -170,13 +173,13 @@ public class reversi {
 	 * Make move at point p. **The method will be called only if the move is legal**
 	 * @param direction : corresponding to direction value setting in getLegalMoves()
 	 **/
-	private static HashMap<Point,Integer> makeMove(HashMap<Point,Integer> originalBoard, Point move, int direction) {
-		
+	private HashMap<Point,Integer> makeMove(HashMap<Point,Integer> originalBoard, Point move, int direction) {
+		int playerColor = p1 ? 1 : 2;
 		int cur_x = move.x;
 		int cur_y = move.y;
 		int deltaX = 20, deltaY = 20;
 		HashMap<Point,Integer> newBoard = new HashMap<Point, Integer>(originalBoard);
-		newBoard.put(move, 1);
+		newBoard.put(move, playerColor);
 		
 		switch(direction){
 			case 0: deltaX = -1; //to left
@@ -207,9 +210,9 @@ public class reversi {
 			}
 			
 			Point next = new Point(cur_x + deltaX, cur_y + deltaY);
-			while(newBoard.get(next) != 1) {
+			while(newBoard.get(next) != playerColor) {
 				Point reverse = new Point(next.x, next.y);
-				newBoard.put(reverse, 1);
+				newBoard.put(reverse, playerColor);
 				next = new Point(next.x + deltaX, next.y + deltaY);
 			}
 		return newBoard;
@@ -220,6 +223,23 @@ public class reversi {
 	 */
 	private static int evaluateBoard(HashMap<Point, Integer> currentBoard) {
 		return diffInMobility(currentBoard) + diffInPositionValue(currentBoard);
+	}
+	
+	/**
+ 	 *	Evaluate the winner of the game
+	 **/
+	private static int evaluateTerminalBoard(HashMap<Point, Integer> currentBoard) {
+		int numOfPlayer = 0;
+		int numOfOpponent = 0;
+		for(Point disk: currentBoard.keySet()) {
+			if(currentBoard.get(disk) == 1) {
+				numOfPlayer ++;
+			}else if(currentBoard.get(disk) == 2){
+				numOfOpponent ++;
+			}
+		}
+		if (numOfPlayer > numOfOpponent) return 5000;
+		else return -5000;		
 	}
 	
 	/**
@@ -264,50 +284,88 @@ public class reversi {
 	*	But hopefully will use the minimax algorithm in the future.
 	**/
 	public Point respond(int depth) {
-		return miniMax(depth).prev;		
+		miniMax(depth);
+		int bestValue = -5000;
+		Point bestMove = null;
+		for(reversi r : gameTree) {
+			if(r.value > bestValue) {
+				bestValue = r.value;
+				bestMove = r.prev;
+			}
+		}
+		return bestMove;
 	}
 	
 	/** Perform the minimax algorithm on the search tree**/
-	public reversi miniMax(int depth) {
-		if(depth > 0) { //If search depth > 0, continue the search;
-			this.legalMoves(); //Generate children
-			if(gameTree.size() > 0) {//If children exist, continue the search.
+	public int miniMax(int depth) {
+		int minimaxValue = 0;
+		//Check if search depth is 0.
+		if(depth > 0) {
+			//Generate children for current player
+			this.legalMoves();
+			//Check if children exist
+			if(gameTree.size() > 0) {
 				if(p1) {
-					return maxChild(gameTree, depth);
-				} else return minChild(gameTree, depth);
-			} else return this;			
-		} else return this; 
+					minimaxValue = maxChild(gameTree, depth);
+				} else minimaxValue = minChild(gameTree, depth);
+				
+			} 
+			//If no children exist for current player, pass turn on to the next.
+			else { 
+				p1 = !p1;
+				this.legalMoves();
+				if(gameTree.size() > 0) {
+					if(p1) {
+						minimaxValue = maxChild(gameTree, depth);
+					} else minimaxValue = minChild(gameTree, depth);
+				} else minimaxValue = evaluateTerminalBoard(board);
+			}
+		} else minimaxValue = evaluateBoard(board);
+		this.value = minimaxValue;
+		return minimaxValue;
 	}
 	
-	private static reversi maxChild(HashSet<reversi> gameTree, int depth) {
-		reversi max = null;
+	private static int maxChild(HashSet<reversi> gameTree, int depth) {
+		int max = -5000;
 		for (reversi r : gameTree) {
-			reversi minimaxed = r.miniMax(depth-1);
-			if (max == null || minimaxed.value > max.value) {
+			int minimaxed = r.miniMax(depth-1);
+			if (minimaxed > max) {
 		        max = minimaxed;
 		    }
 		}
 		return max;
 	}
 	
-	private static reversi minChild(HashSet<reversi> gameTree, int depth) {
-		reversi min = null;
+	private static int minChild(HashSet<reversi> gameTree, int depth) {
+		int min = 5000;
 		for (reversi r : gameTree) {
-			reversi minimaxed = r.miniMax(depth-1);
-			if (min == null || minimaxed.value > min.value) {
+			int minimaxed = r.miniMax(depth-1);
+			if (minimaxed < min) {
 		        min = minimaxed;
 		    }
 		}
 		return min;
 	}
 	
+	/** Test method to make sure minimax is working correctly **/
+	public void printTreeValues(int previous, int round) {
+		System.out.print(previous + " => ");
+		for(reversi r: gameTree) {
+			System.out.print(r.value + " ");
+		}
+		System.out.println();
+		for(reversi r: gameTree) {
+			r.printTreeValues(r.value, round + 1);
+		}
+	}
 	/*
 	 * Main
 	 */
 	public static void main(String[] args) {
 		
 		reversi game = processInput();
-		Point output = game.respond(5);
+		Point output = game.respond(3);
+		//game.printTreeValues(0, 1);
 		System.out.println(output.x + " " + output.y);
 		
 				
