@@ -15,6 +15,7 @@ import java.util.TreeMap;
 public class reversi {
 	/*------------------------------STATIC FIELDS------------------------------*/
 	protected static int[] offsets = {3,2,1,0,0,1,2,3};
+	protected static int[] rowLengths = {8,10,12,14,14,12,10,8};
 	/* Note: notice that positionValue[y][x] is the position value of point(x,y) */
 	protected static int[][] positionValueTable = {
 			{0, 0, 0, 120, -20, 20, 5, 5, 20, -20, 120, 0, 0, 0},
@@ -66,19 +67,17 @@ public class reversi {
 	 * Creates a reversi object by reading the standard input.
 	 **/
 	static reversi processInput() {
-		Scanner input = new Scanner(System.in).useDelimiter("");
+		Scanner input = new Scanner(System.in);
 		HashMap<Point, Integer> newBoard = new HashMap<Point, Integer>();
 		int j = 0;
 		while(j < 8) {
 			int i = 0;
-			while(input.hasNextInt()) {
-				
-				int value = input.nextInt();
+			while(i < rowLengths[j]) {
+				int value = Integer.parseInt(input.next());
 				int offset = offsets[j];
 				newBoard.put(new Point(i+offset,j) , value);
 				i++;
 			}
-			input.nextLine();
 			j++;
 		}
 		input.close();
@@ -377,7 +376,7 @@ public class reversi {
 		reversi game = processInput();
 		Point output = game.respond(4);
 		//game.printTreeValues(0, 1);
-		System.out.println((output.x - offsets[output.y] + 1) + " " + (output.y + 1));
+		System.out.println((output.y + 1) + " " + (output.x - offsets[output.y] + 1) );
 		
 				
 	
