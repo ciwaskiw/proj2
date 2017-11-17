@@ -284,7 +284,7 @@ public class reversi {
 	*	But hopefully will use the minimax algorithm in the future.
 	**/
 	public Point respond(int depth) {
-		miniMax(depth);
+		miniMax(depth, Integer.MIN_VALUE, Integer.MAX_VALUE);
 		int bestValue = -5000;
 		Point bestMove = null;
 		for(reversi r : gameTree) {
@@ -297,7 +297,7 @@ public class reversi {
 	}
 	
 	/** Perform the minimax algorithm on the search tree**/
-	public int miniMax(int depth) {
+	public int miniMax(int depth, int alpha, int beta) {
 		int minimaxValue = 0;
 		//Check if search depth is 0.
 		if(depth > 0) {
@@ -306,8 +306,8 @@ public class reversi {
 			//Check if children exist
 			if(gameTree.size() > 0) {
 				if(p1) {
-					minimaxValue = maxChild(gameTree, depth);
-				} else minimaxValue = minChild(gameTree, depth);
+					minimaxValue = maxChild(gameTree, depth, alpha, beta);
+				} else minimaxValue = minChild(gameTree, depth, alpha, beta);
 				
 			} 
 			//If no children exist for current player, pass turn on to the next.
@@ -316,8 +316,8 @@ public class reversi {
 				this.legalMoves();
 				if(gameTree.size() > 0) {
 					if(p1) {
-						minimaxValue = maxChild(gameTree, depth);
-					} else minimaxValue = minChild(gameTree, depth);
+						minimaxValue = maxChild(gameTree, depth, alpha, beta);
+					} else minimaxValue = minChild(gameTree, depth, alpha, beta);
 				} else minimaxValue = evaluateTerminalBoard(board);
 			}
 		} else minimaxValue = evaluateBoard(board);
@@ -325,25 +325,35 @@ public class reversi {
 		return minimaxValue;
 	}
 	
-	private static int maxChild(HashSet<reversi> gameTree, int depth) {
+	private int maxChild(HashSet<reversi> gameTree, int depth, int alpha, int beta) {
 		int max = -5000;
 		for (reversi r : gameTree) {
-			int minimaxed = r.miniMax(depth-1);
+			int minimaxed = r.miniMax(depth-1, alpha, beta);
 			if (minimaxed > max) {
 		        max = minimaxed;
 		    }
+			if(max > alpha) {
+				alpha = max;
+			}
+			if(beta <= alpha) break;
 		}
+		//System.out.println("Maximizing: Beta: " + beta + " Alpha: " + alpha);
 		return max;
 	}
 	
-	private static int minChild(HashSet<reversi> gameTree, int depth) {
+	private int minChild(HashSet<reversi> gameTree, int depth, int alpha, int beta) {
 		int min = 5000;
 		for (reversi r : gameTree) {
-			int minimaxed = r.miniMax(depth-1);
+			int minimaxed = r.miniMax(depth-1, alpha, beta);
 			if (minimaxed < min) {
 		        min = minimaxed;
 		    }
+			if(min < beta) {
+				beta = min;
+			}
+			if(beta <= alpha) break;
 		}
+		//System.out.println("Minimizing: Beta: " + beta + " Alpha: " + alpha);
 		return min;
 	}
 	
@@ -358,13 +368,14 @@ public class reversi {
 			r.printTreeValues(r.value, round + 1);
 		}
 	}
+	
 	/*
 	 * Main
 	 */
 	public static void main(String[] args) {
 		
 		reversi game = processInput();
-		Point output = game.respond(3);
+		Point output = game.respond(4);
 		//game.printTreeValues(0, 1);
 		System.out.println(output.x + " " + output.y);
 		
