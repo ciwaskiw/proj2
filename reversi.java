@@ -14,8 +14,8 @@ import java.util.TreeMap;
  **/
 public class reversi {
 	/*------------------------------STATIC FIELDS------------------------------*/
-	protected static int[] offsets = {3,2,1,0,0,1,2,3};
-	protected static int[] rowLengths = {8,10,12,14,14,12,10,8};
+	protected static int[] offsets = {9,8,7,6,5,4,3,2,1,0};
+	protected static int[] rowLengths = {2,4,6,8,10,12,14,16,18,20};
 	/* Note: notice that positionValue[y][x] is the position value of point(x,y) */
 	protected static int[][] positionValueTable = {
 			{0, 0, 0, 120, -20, 20, 5, 5, 20, -20, 120, 0, 0, 0},
@@ -70,7 +70,7 @@ public class reversi {
 		Scanner input = new Scanner(System.in);
 		HashMap<Point, Integer> newBoard = new HashMap<Point, Integer>();
 		int j = 0;
-		while(j < 8) {
+		while(j < 10) {
 			int i = 0;
 			while(i < rowLengths[j]) {
 				int value = Integer.parseInt(input.next());
