@@ -1,5 +1,5 @@
 // Team First Place: Michael Crouch (113581236), Jin Liu (114479952), Chris Iwaskiw (113576881)
-
+// Project 3
 import java.awt.Point;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,36 +10,31 @@ import java.util.TreeMap;
 
 
 /**
- * computer player for reversi on a custom board
+ * computer player for triangularreversi on a custom board
  **/
-public class reversi {
+public class triangularreversi {
 	/*------------------------------STATIC FIELDS------------------------------*/
 	protected static int[] offsets = {9,8,7,6,5,4,3,2,1,0};
 	protected static int[] rowLengths = {2,4,6,8,10,12,14,16,18,20};
-	/* Note: notice that positionValue[y][x] is the position value of point(x,y) */
+	/* Note: notice that positionValue[y][x] is the position value of point(x,y) 
+	 * Based on the positionValueTable Jin made in the google chat.*/
 	protected static int[][] positionValueTable = {
-			{0, 0, 0, 120, -20, 20, 5, 5, 20, -20, 120, 0, 0, 0},
-			{0, 0, 120, -40, -40, 0, 0, 0, 0, -40, -40, 120, 0, 0,},
-			{0, 120, -40, -40, -5, 15, 18, 18, 15, -5, -40, -40, 120,0},
-			{120, -20, -20, 0, 10, 13, 1, 1, 13, 10, 0, -20, -20, 120},
-			{120, -20, -20, 0, 10, 13, 1, 1, 13, 10, 0, -20, -20, 120},
-			{0, 120, -40, -40, -5, 15, 18, 18, 15, -5, -40, -40, 120,0},
-			{0, 0, 120, -40, -40, 0, 0, 0, 0, -40, -40, 120, 0, 0,},
-			{0, 0, 0, 120, -20, 20, 5, 5, 20, -20, 120, 0, 0, 0}
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 240, 240, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 120, -60, -60, 120, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 120, -40, -5, -5, -40, 120, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 120, -40, 3, 5, 5, 3, -40, 120, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 120, -40, 0, 3, 11, 11, 3, 0, -40, 120, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 120, -40, 0, 0, 5, 9, 9, 5, 0, 0, -40, 120, 0, 0, 0, 0},
+			{0, 0, 0, 120, -40, 0, 0, 5, 6, 3, 3, 6, 5, 0, 0, -40, 120, 0, 0, 0},
+			{0, 0, 120, -40, 0, 0, 5, 6, 3, 3, 3, 3, 6, 5, 0, 0, -40, 120, 0, 0},
+			{0, 120, -40, 0, 0, 5, 6, 3, 3, 3, 3, 3, 3, 6, 5, 0, 0, -40, 120, 0},
+			{120, -40, 0, 0, 5, 6, 3, 4, 4, 4, 4, 4, 4, 3, 6, 5, 0, 0, -40, 120}
 			};
 
 	protected static int color(boolean p1) {
 		return p1 ? 1 : 2;
 	}
-/*	                  120   -20   20   5   5   20   -20   120
-                     120  -40   -40   0    0   0   0    -40   -40   120	
-                120  -40  -40   -5    15   18  18  15   -5    -40   -40   120
-          120  -20   -20    0   10    13   1   1   13   10     0    -20   -20   120
-          120  -20   -20    0   10    13   1   1   13   10     0    -20   -20   120
-               120   -40  -40   -5    15   18  18  15   -5    -40   -40   120
-                     120  -40   -40   0    0   0   0    -40   -40   120	
-                          120   -20   20   5   5   20   -20   120
-*/
+
 	
 	/*------------------------------PUBLIC FIELDS------------------------------*/
 	
@@ -50,23 +45,23 @@ public class reversi {
 	/**Whoever's turn it is: true for player 1, false for player 2**/
 	public boolean p1;
 	/**The set of legal moves and their respective evalutation values.**/
-	public HashSet<reversi> gameTree = new HashSet<reversi>();
+	public HashSet<triangularreversi> gameTree = new HashSet<triangularreversi>();
 	/**The evaluation value of the current board**/
 	public int value;
 	
 	/*------------------------------CLASS CONSTRUCTOR------------------------------*/
 	
-	/** A reversi object contains a game board, a record of whatever the previous**/
-	public reversi(HashMap<Point, Integer> board, Point prev, boolean p1) {
+	/** A triangularreversi object contains a game board, a record of whatever the previous**/
+	public triangularreversi(HashMap<Point, Integer> board, Point prev, boolean p1) {
 		this.board = board;
 		this.prev = prev;
 		this.p1 = p1;
 	}
 
 	/**
-	 * Creates a reversi object by reading the standard input.
+	 * Creates a triangularreversi object by reading the standard input.
 	 **/
-	static reversi processInput() {
+	static triangularreversi processInput() {
 		Scanner input = new Scanner(System.in);
 		HashMap<Point, Integer> newBoard = new HashMap<Point, Integer>();
 		int j = 0;
@@ -81,7 +76,7 @@ public class reversi {
 			j++;
 		}
 		input.close();
-		return new reversi(newBoard, null, true);
+		return new triangularreversi(newBoard, null, true);
 	}
 
 
@@ -147,7 +142,7 @@ public class reversi {
 				if(board.containsKey(possible_move)&& board.get(possible_move) == 0) {
 					//System.out.println("legal move at (" + possible_move.x + "," + possible_move.y + ")");
 					HashMap<Point, Integer> nextBoard = makeMove(board, possible_move, direction);
-					reversi nextGame = new reversi(nextBoard, possible_move, !p1);
+					triangularreversi nextGame = new triangularreversi(nextBoard, possible_move, !p1);
 					gameTree.add(nextGame); 
 				}
 				next = possible_move;
@@ -286,7 +281,7 @@ public class reversi {
 		miniMax(depth, Integer.MIN_VALUE, Integer.MAX_VALUE);
 		int bestValue = -5000;
 		Point bestMove = null;
-		for(reversi r : gameTree) {
+		for(triangularreversi r : gameTree) {
 			if(r.value > bestValue) {
 				bestValue = r.value;
 				bestMove = r.prev;
@@ -324,9 +319,9 @@ public class reversi {
 		return minimaxValue;
 	}
 	
-	private int maxChild(HashSet<reversi> gameTree, int depth, int alpha, int beta) {
+	private int maxChild(HashSet<triangularreversi> gameTree, int depth, int alpha, int beta) {
 		int max = -5000;
-		for (reversi r : gameTree) {
+		for (triangularreversi r : gameTree) {
 			int minimaxed = r.miniMax(depth-1, alpha, beta);
 			if (minimaxed > max) {
 		        max = minimaxed;
@@ -340,9 +335,9 @@ public class reversi {
 		return max;
 	}
 	
-	private int minChild(HashSet<reversi> gameTree, int depth, int alpha, int beta) {
+	private int minChild(HashSet<triangularreversi> gameTree, int depth, int alpha, int beta) {
 		int min = 5000;
-		for (reversi r : gameTree) {
+		for (triangularreversi r : gameTree) {
 			int minimaxed = r.miniMax(depth-1, alpha, beta);
 			if (minimaxed < min) {
 		        min = minimaxed;
@@ -359,11 +354,11 @@ public class reversi {
 	/** Test method to make sure minimax is working correctly **/
 	public void printTreeValues(int previous, int round) {
 		System.out.print(previous + " => ");
-		for(reversi r: gameTree) {
+		for(triangularreversi r: gameTree) {
 			System.out.print(r.value + " ");
 		}
 		System.out.println();
-		for(reversi r: gameTree) {
+		for(triangularreversi r: gameTree) {
 			r.printTreeValues(r.value, round + 1);
 		}
 	}
@@ -373,7 +368,7 @@ public class reversi {
 	 */
 	public static void main(String[] args) {
 		
-		reversi game = processInput();
+		triangularreversi game = processInput();
 		Point output = game.respond(4);
 		//game.printTreeValues(0, 1);
 		System.out.println((output.y + 1) + " " + (output.x - offsets[output.y] + 1) );
